@@ -1,0 +1,13 @@
+{
+  "name": "deriv-ai",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node apps/api/src/server.js",
+    "test": "node --test apps/api/test/*.test.js",
+    "check": "node --check apps/api/src/*.js && node --check apps/web/public/app.js",
+    "security:scan": "! rg -n --hidden --glob '!.git/**' --glob '!.env.example' '(?:DERIV_APP_ID|DERIV_OAUTH_CLIENT_ID|DATABASE_URL|SESSION_SECRET|ENCRYPTION_KEY)=[^[:space:]]+' ."
+  },
+  "engines": { "node": ">=22" }
+}

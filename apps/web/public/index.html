@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#090f13">
+  <title>DERIV AI — Market Intelligence</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Primary navigation">
+      <div class="brand"><span class="brand-mark">◒</span><span>DERIV <b>AI</b><small>MARKET INTELLIGENCE</small></span></div>
+      <div class="mode-badge"><i></i><span>PAPER MODE</span><small>Real execution unavailable</small></div>
+      <nav>
+        <button class="nav-link active" data-section="Dashboard">Overview</button>
+        <button class="nav-link" data-section="Markets">Markets</button>
+        <button class="nav-link" data-section="AI Signals">AI Signals</button>
+        <button class="nav-link" data-section="Positions">Positions</button>
+        <button class="nav-link" data-section="History">History</button>
+        <button class="nav-link" data-section="Risk">Risk</button>
+        <button class="nav-link" data-section="Strategy Lab">Strategy Lab</button>
+      </nav>
+      <p class="sidebar-foot">NO EDGE = NO TRADE</p>
+    </aside>
+
+    <main>
+      <header class="topbar">
+        <div class="mobile-brand"><span class="brand-mark">◒</span> DERIV <b>AI</b></div>
+        <div class="connection-status"><i></i><span id="connection">CHECKING CONNECTION</span></div>
+        <button class="icon-button" id="help" aria-label="Open support help">?</button>
+      </header>
+
+      <section class="hero">
+        <div>
+          <p class="eyebrow">AI-POWERED MARKET INTELLIGENCE</p>
+          <h1>Clear evidence.<br><em>Disciplined execution.</em></h1>
+          <p class="hero-copy">A safety-first workspace for live Deriv market intelligence. No prices, balances, or outcomes are ever invented.</p>
+        </div>
+        <div class="hero-orb" aria-hidden="true"><span>AI</span><small>GUARDED</small></div>
+      </section>
+
+      <section class="connection-card" aria-labelledby="connect-title">
+        <div class="connection-copy">
+          <p class="eyebrow">ACCOUNT CONNECTION</p>
+          <h2 id="connect-title">Connect your Deriv account securely</h2>
+          <p id="connection-detail">Deriv OAuth must be configured on the server before account data can be displayed.</p>
+        </div>
+        <div class="connection-actions">
+          <button class="button primary" id="connect">LOGIN WITH DERIV</button>
+          <button class="button subtle" id="access-code">ENTER ACCESS CODE</button>
+        </div>
+      </section>
+
+      <section class="safety-notice"><strong>Responsible trading.</strong> Trading involves risk. AI analysis does not guarantee profits. Past performance does not guarantee future results.</section>
+
+      <section class="stat-grid" aria-label="Account and system status">
+        <article><p>ACCOUNT</p><strong>DATA UNAVAILABLE</strong><span>Connect Deriv to retrieve verified account data.</span></article>
+        <article><p>MARKET DATA</p><strong id="marketStatus">DATA UNAVAILABLE</strong><span>Only live, validated data is displayed.</span></article>
+        <article><p>RISK ENGINE</p><strong class="positive">ACTIVE</strong><span>Unsafe executions are blocked.</span></article>
+        <article><p>AUTONOMOUS MODE</p><strong>OFF</strong><span>Requires staged safety approval.</span></article>
+      </section>
+
+      <section class="content-grid">
+        <article class="panel signal-panel">
+          <div class="panel-heading"><div><p class="eyebrow">CURRENT DECISION</p><h2>NO TRADE</h2></div><span class="chip">SAFETY FIRST</span></div>
+          <div class="empty-state"><span class="empty-mark">×</span><div><strong>DATA UNAVAILABLE</strong><p>Live market, contract, and proposal data will appear only after a verified Deriv connection.</p></div></div>
+          <div class="signal-actions"><button class="button disabled" disabled>ANALYZE</button><button class="button disabled" disabled>PAPER TRADE</button><button class="button disabled outline" disabled>APPROVE TRADE</button></div>
+        </article>
+        <article class="panel guard-panel"><p class="eyebrow">EXECUTION GUARD</p><h2>Every gate must pass</h2><ol><li>Fresh market data and a fresh signal</li><li>Supported contract and valid proposal</li><li>Positive expected value</li><li>Risk, balance, exposure, and loss limits</li><li>Duplicate protection and emergency-stop checks</li></ol></article>
+      </section>
+
+      <section class="panel scanner"><div class="panel-heading"><div><p class="eyebrow">MARKET SCANNER</p><h2>Live opportunities</h2></div><span class="muted">Dynamic discovery only</span></div><div class="scanner-head"><span>MARKET</span><span>PRICE</span><span>VOLATILITY</span><span>DECISION</span></div><div class="scanner-row"><span>—</span><span>DATA UNAVAILABLE</span><span>—</span><span>NO TRADE</span></div></section>
+
+      <section class="support-bar"><div><p class="eyebrow">NEW TO DERIV?</p><strong>Create a Deriv account first</strong><span>No special trading advantage is claimed.</span></div><a class="button subtle" href="https://t.deriv.link?t=DFWK7P758YVU" target="_blank" rel="noreferrer">CREATE DERIV ACCOUNT</a><button class="text-button" id="support">CONTACT SUPPORT</button></section>
+    </main>
+  </div>
+
+  <nav class="bottom-nav" aria-label="Mobile navigation"><button class="active" data-section="Dashboard">Home</button><button data-section="Markets">Markets</button><button data-section="AI Signals">AI</button><button data-section="Positions">Orders</button><button data-section="Account">Account</button><button class="stop" id="emergency">STOP</button></nav>
+  <dialog id="dialog"><button class="dialog-close" aria-label="Close">×</button><p class="eyebrow" id="dialog-label">DERIV AI</p><h2 id="dialog-title">Connection setup required</h2><p id="dialog-body"></p><button class="button primary dialog-close">CLOSE</button></dialog>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <script src="/app.js"></script>
+</body>
+</html>
