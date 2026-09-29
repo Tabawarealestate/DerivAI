@@ -114,6 +114,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val riskSettingsFlow: StateFlow<RiskSettingsEntity?> = database.riskSettingsDao().getRiskSettings()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
+    val isEmergencyStopActive: StateFlow<Boolean> = riskSettingsFlow.map {
+        it?.emergencyStopActive ?: false
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
     val effectiveBalanceFlow: StateFlow<Double> = combine(
         executionEngine.accountMode,
         webSocketClient.authorizedAccount,
@@ -308,6 +312,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun executeManualOrder(signal: SignalCandidate, isPaper: Boolean) {
+        if (riskEngine.getSettings().emergencyStopActive) {
+            _userMessage.value = "Order blocked: Emergency Stop is currently ACTIVE. Reset to resume trading."
+            return
+        }
         val proposalId = _currentProposal.value?.id ?: "PROP_MANUAL_${System.currentTimeMillis()}"
         if (isPaper) {
             executionEngine.setTradingMode(TradingMode.PAPER)
@@ -333,6 +341,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun setAutonomousTrading(enabled: Boolean) {
         if (enabled) {
+            if (riskEngine.getSettings().emergencyStopActive) {
+                _userMessage.value = "Cannot start autonomous trading: Emergency Stop is ACTIVE. Resume trading first."
+                return
+            }
             executionEngine.setTradingMode(TradingMode.AUTONOMOUS)
             _userMessage.value = "Autonomous Trading Activated within Risk Engine limits."
         } else {
@@ -343,7 +355,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun triggerEmergencyStop() {
         val updated = riskEngine.triggerEmergencyStop()
-        executionEngine.setTradingMode(TradingMode.PAPER)
+        executionEngine.emergencyHaltAll()
         viewModelScope.launch(Dispatchers.IO) {
             database.riskSettingsDao().setRiskSettings(updated)
             database.auditDao().insertLog(
@@ -355,15 +367,31 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 )
             )
         }
-        _userMessage.value = "EMERGENCY STOP ACTIVATED! All executions stopped."
+        _userMessage.value = "EMERGENCY STOP ACTIVATED! All paper and live trades halted."
     }
 
     fun clearEmergencyStop() {
         val updated = riskEngine.clearEmergencyStop()
         viewModelScope.launch(Dispatchers.IO) {
             database.riskSettingsDao().setRiskSettings(updated)
+            database.auditDao().insertLog(
+                AuditLogEntity(
+                    action = "EMERGENCY_STOP_CLEARED",
+                    accountId = executionEngine.accountMode.value.name,
+                    details = "Emergency stop cleared. System back in normal monitoring mode.",
+                    level = "INFO"
+                )
+            )
         }
         _userMessage.value = "Emergency stop cleared. System back in normal monitoring mode."
+    }
+
+    fun toggleEmergencyStop() {
+        if (isEmergencyStopActive.value) {
+            clearEmergencyStop()
+        } else {
+            triggerEmergencyStop()
+        }
     }
 
     fun updateRiskSettings(settings: RiskSettingsEntity) {

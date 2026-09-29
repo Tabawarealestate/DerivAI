@@ -30,6 +30,7 @@ fun DerivAiHeaderBar(
     accountMode: AccountMode,
     balance: Double,
     isAutonomousActive: Boolean,
+    isEmergencyStopActive: Boolean = false,
     onEmergencyStop: () -> Unit,
     onAccountModeClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -101,11 +102,12 @@ fun DerivAiHeaderBar(
                 Button(
                     onClick = onEmergencyStop,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = LossRed,
+                        containerColor = if (isEmergencyStopActive) LossRed else LossRed,
                         contentColor = Color.White
                     ),
                     shape = RoundedCornerShape(8.dp),
-                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                    border = if (isEmergencyStopActive) androidx.compose.foundation.BorderStroke(1.5.dp, Color.White) else null,
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
                     modifier = Modifier
                         .height(34.dp)
                         .testTag("emergency_stop_button")
@@ -113,12 +115,13 @@ fun DerivAiHeaderBar(
                     Icon(
                         imageVector = Icons.Default.Warning,
                         contentDescription = "Stop All Trading",
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(16.dp),
+                        tint = if (isEmergencyStopActive) Color.Yellow else Color.White
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "STOP",
-                        fontSize = 11.sp,
+                        text = if (isEmergencyStopActive) "HALTED (RESET)" else "STOP",
+                        fontSize = 10.sp,
                         fontWeight = FontWeight.Black,
                         fontFamily = FontFamily.Monospace
                     )

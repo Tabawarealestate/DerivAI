@@ -277,7 +277,41 @@ class ExecutionEngine(
         }
     }
 
+    fun emergencyHaltAll() {
+        _tradingMode.value = TradingMode.PAPER
+        val openPaper = _activeSimulatedContracts.value
+        if (openPaper.isNotEmpty()) {
+            val refundedStake = openPaper.sumOf { it.stake }
+            _paperBalance.value += refundedStake
+            _activeSimulatedContracts.value = emptyList()
+            scope.launch {
+                openPaper.forEach { ord ->
+                    val cancelled = ord.copy(
+                        exitTime = System.currentTimeMillis(),
+                        result = "CANCELLED",
+                        profitLoss = 0.0,
+                        actualPayout = ord.stake,
+                        exitReason = "Emergency Stop: Position halted and stake refunded"
+                    )
+                    tradeDao.updateOrder(cancelled)
+                }
+                auditDao.insertLog(
+                    AuditLogEntity(
+                        action = "EMERGENCY_HALT_EXECUTED",
+                        accountId = _accountMode.value.name,
+                        details = "All active paper contracts cancelled. Stake refunded: $refundedStake",
+                        level = "SECURITY"
+                    )
+                )
+            }
+        }
+        _lastExecutionLog.value = "EMERGENCY HALT: All trading stopped & simulated contracts cancelled."
+    }
+
     private fun evaluateOpenPaperTrades(tick: TickData) {
+        if (riskEngine.getSettings().emergencyStopActive) {
+            return
+        }
         val currentOpen = _activeSimulatedContracts.value
         if (currentOpen.isEmpty()) return
 

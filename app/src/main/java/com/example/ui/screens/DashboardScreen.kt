@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -40,6 +41,7 @@ fun DashboardScreen(
     val proposal by viewModel.currentProposal.collectAsState()
     val openOrders by viewModel.openOrders.collectAsState()
     val tradingMode by viewModel.executionEngine.tradingMode.collectAsState()
+    val isEmergencyStopActive by viewModel.isEmergencyStopActive.collectAsState()
     val accountMode by viewModel.executionEngine.accountMode.collectAsState()
     val balance by viewModel.effectiveBalanceFlow.collectAsState()
     val balanceCurrency by viewModel.balanceCurrency.collectAsState()
@@ -60,6 +62,58 @@ fun DashboardScreen(
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
+        if (isEmergencyStopActive) {
+            item {
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = LossRedBg),
+                    border = androidx.compose.foundation.BorderStroke(1.5.dp, LossRed),
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier.fillMaxWidth().testTag("emergency_stop_banner")
+                ) {
+                    Row(
+                        modifier = Modifier.padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Warning,
+                            contentDescription = null,
+                            tint = LossRed,
+                            modifier = Modifier.size(28.dp)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "EMERGENCY STOP ACTIVE",
+                                fontWeight = FontWeight.Black,
+                                fontSize = 13.sp,
+                                color = LossRed,
+                                fontFamily = FontFamily.Monospace
+                            )
+                            Text(
+                                text = "All paper trading and autonomous orders are halted.",
+                                fontSize = 11.sp,
+                                color = TextSecondary
+                            )
+                        }
+                        Button(
+                            onClick = { viewModel.clearEmergencyStop() },
+                            colors = ButtonDefaults.buttonColors(containerColor = LossRed),
+                            shape = RoundedCornerShape(6.dp),
+                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+                            modifier = Modifier.testTag("resume_trading_button")
+                        ) {
+                            Text(
+                                text = "RESUME",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
         item {
             Spacer(modifier = Modifier.height(4.dp))
             ResponsibleTradingBanner()
@@ -316,24 +370,29 @@ fun DashboardScreen(
                         // PAPER TRADE
                         Button(
                             onClick = { viewModel.executeManualOrder(sig, isPaper = true) },
-                            colors = ButtonDefaults.buttonColors(containerColor = BadgePaperBg),
+                            enabled = !isEmergencyStopActive,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (isEmergencyStopActive) SurfaceVariantDark else BadgePaperBg,
+                                disabledContainerColor = SurfaceVariantDark,
+                                disabledContentColor = TextMuted
+                            ),
                             shape = RoundedCornerShape(8.dp),
                             modifier = Modifier.weight(1f).testTag("paper_trade_button")
                         ) {
-                            Text("PAPER TRADE", fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                            Text(if (isEmergencyStopActive) "HALTED" else "PAPER TRADE", fontSize = 10.sp, fontWeight = FontWeight.Bold)
                         }
 
                         // APPROVE REAL TRADE
                         Button(
                             onClick = { viewModel.executeManualOrder(sig, isPaper = false) },
-                            enabled = sig.decision == "TRADE",
+                            enabled = !isEmergencyStopActive && sig.decision == "TRADE",
                             colors = ButtonDefaults.buttonColors(containerColor = CyanPrimary, contentColor = BackgroundDark),
                             shape = RoundedCornerShape(8.dp),
                             modifier = Modifier.weight(1.2f).testTag("approve_trade_button")
                         ) {
                             Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(14.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("APPROVE", fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                            Text(if (isEmergencyStopActive) "HALTED" else "APPROVE", fontSize = 10.sp, fontWeight = FontWeight.Bold)
                         }
                     }
 
@@ -342,30 +401,32 @@ fun DashboardScreen(
                     // Auto Trading Toggle Button (Section 15, 86)
                     Button(
                         onClick = {
-                            if (isAutoTrading) {
+                            if (isEmergencyStopActive) {
+                                viewModel.clearEmergencyStop()
+                            } else if (isAutoTrading) {
                                 viewModel.setAutonomousTrading(false)
                             } else {
                                 showAutoConfirmDialog = true
                             }
                         },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isAutoTrading) LossRed else SurfaceVariantDark,
-                            contentColor = if (isAutoTrading) Color.White else CyanPrimary
+                            containerColor = if (isEmergencyStopActive || isAutoTrading) LossRed else SurfaceVariantDark,
+                            contentColor = if (isEmergencyStopActive || isAutoTrading) Color.White else CyanPrimary
                         ),
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .border(1.dp, if (isAutoTrading) LossRed else CyanPrimary, RoundedCornerShape(8.dp))
+                            .border(1.dp, if (isEmergencyStopActive || isAutoTrading) LossRed else CyanPrimary, RoundedCornerShape(8.dp))
                             .testTag("auto_trading_toggle_button")
                     ) {
                         Icon(
-                            imageVector = if (isAutoTrading) Icons.Default.Stop else Icons.Default.PlayArrow,
+                            imageVector = if (isEmergencyStopActive) Icons.Default.Warning else if (isAutoTrading) Icons.Default.Stop else Icons.Default.PlayArrow,
                             contentDescription = null,
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = if (isAutoTrading) "STOP AUTONOMOUS TRADING" else "ENABLE AUTONOMOUS TRADING",
+                            text = if (isEmergencyStopActive) "EMERGENCY STOP ACTIVE - TAP TO RESUME" else if (isAutoTrading) "STOP AUTONOMOUS TRADING" else "ENABLE AUTONOMOUS TRADING",
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
                             fontFamily = FontFamily.Monospace

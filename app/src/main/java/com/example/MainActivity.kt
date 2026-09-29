@@ -72,6 +72,7 @@ fun DerivAiApp(viewModel: MainViewModel) {
     val connectionState by viewModel.webSocketClient.connectionState.collectAsState()
     val accountMode by viewModel.executionEngine.accountMode.collectAsState()
     val tradingMode by viewModel.executionEngine.tradingMode.collectAsState()
+    val isEmergencyStopActive by viewModel.isEmergencyStopActive.collectAsState()
     val userMessage by viewModel.userMessage.collectAsState()
     val balance = viewModel.getEffectiveBalance()
 
@@ -110,9 +111,10 @@ fun DerivAiApp(viewModel: MainViewModel) {
                 accountMode = accountMode,
                 balance = balance,
                 isAutonomousActive = tradingMode == TradingMode.AUTONOMOUS,
+                isEmergencyStopActive = isEmergencyStopActive,
                 onEmergencyStop = {
                     triggerVibration()
-                    viewModel.triggerEmergencyStop()
+                    viewModel.toggleEmergencyStop()
                 },
                 onAccountModeClick = {
                     if (accountMode == AccountMode.DEMO) {
