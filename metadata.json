@@ -1,0 +1,6 @@
+{
+  "name": "Deriv AI",
+  "description": "Professional autonomous trading & market intelligence platform for Deriv with real-time analytics, risk controls, and automated strategy execution.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
